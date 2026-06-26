@@ -43,6 +43,33 @@ app.post('/rsvp', (req, res) => {
   }
 });
 
+// ── Add to Calendar (.ics) ──
+app.get('/calendar.ics', (req, res) => {
+  // July 9 2026, 4:00 PM - 8:00 PM Mountain Time (UTC-6 in July)
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Cabin Night//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:cabin-night-2026@seafoodextravaganza',
+    'DTSTAMP:20260601T000000Z',
+    'DTSTART:20260709T220000Z',
+    'DTEND:20260710T020000Z',
+    'SUMMARY:Cabin Night – Oysters / Shrimp / Cocktails',
+    'DESCRIPTION:Bill Heinlein\'s Cabin Night during Member/Guest Week.\nOysters\, shrimp boil\, crab legs\, and cold drinks.\nBYOB · Bring your wife · Appetizer to share optional.',
+    'LOCATION:5056 S. Perry Park Road\, Sedalia\, CO 80135',
+    'URL:https://cabin-seafood-night-production.up.railway.app',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  res.setHeader('Content-Type', 'text/calendar;charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="cabin-night.ics"');
+  res.send(ics);
+});
+
 // ── Public RSVP list (names + party size only) ──
 app.get('/rsvps', (req, res) => {
   try {
