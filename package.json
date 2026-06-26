@@ -1,0 +1,13 @@
+{
+  "name": "seafood-extravaganza",
+  "version": "1.0.0",
+  "description": "Member-Guest Week Seafood Extravaganza event site",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
