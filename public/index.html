@@ -666,14 +666,15 @@
       const container = document.getElementById('guestList');
       try {
         const res = await fetch('/rsvps');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const rsvps = await res.json();
 
-        if (rsvps.length === 0) {
+        if (!Array.isArray(rsvps) || rsvps.length === 0) {
           container.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">No RSVPs yet — be the first!</p>';
           return;
         }
 
-        const totalPeople = rsvps.reduce((sum, r) => sum + r.guests, 0);
+        const totalPeople = rsvps.reduce((sum, r) => sum + (parseInt(r.guests) || 1), 0);
 
         const chips = rsvps.map(r => `
           <div style="
@@ -688,25 +689,26 @@
           ">
             <span style="color:var(--gold);font-size:0.9rem;">✓</span>
             <span style="color:var(--white);font-size:0.9rem;font-weight:500;">${r.name}</span>
-            ${r.guests > 1 ? `<span style="color:var(--muted);font-size:0.78rem;">+${r.guests - 1}</span>` : ''}
+            ${parseInt(r.guests) > 1 ? '<span style="color:var(--muted);font-size:0.78rem;">+' + (parseInt(r.guests) - 1) + '</span>' : ''}
           </div>
         `).join('');
 
         container.innerHTML = `
-          <div style="margin-bottom:1.5rem;">
-            ${chips}
-          </div>
+          <div style="margin-bottom:1.5rem;">${chips}</div>
           <p style="color:var(--muted);font-size:0.85rem;">
             <strong style="color:var(--gold)">${rsvps.length}</strong> ${rsvps.length === 1 ? 'group' : 'groups'} · 
             <strong style="color:var(--gold)">${totalPeople}</strong> people confirmed so far
           </p>
         `;
       } catch(err) {
-        container.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">Couldn't load the list right now.</p>';
+        container.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">No RSVPs yet — be the first!</p>';
+        console.error('loadGuestList error:', err);
       }
     }
 
     loadGuestList();
+    // Refresh every 30 seconds
+    setInterval(loadGuestList, 30000);
 
     // ── RSVP submission ──
     document.getElementById('rsvpForm').addEventListener('submit', async function(e) {
