@@ -9,17 +9,29 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
 const RSVP_FILE = path.join(DATA_DIR, 'rsvps.json');
 
+// Test if DATA_DIR is actually writable, fall back to __dirname if not
+let resolvedDataDir = DATA_DIR;
+try {
+  const testFile = path.join(DATA_DIR, '.write_test');
+  fs.writeFileSync(testFile, 'test', 'utf8');
+  fs.unlinkSync(testFile);
+  console.log(`[STARTUP] DATA_DIR is writable: ${DATA_DIR}`);
+} catch (err) {
+  console.error(`[STARTUP] DATA_DIR not writable (${err.message}), falling back to __dirname`);
+  resolvedDataDir = __dirname;
+}
+const RSVP_FILE_RESOLVED = path.join(resolvedDataDir, 'rsvps.json');
 console.log(`[STARTUP] DATA_DIR: ${DATA_DIR}`);
-console.log(`[STARTUP] RSVP_FILE: ${RSVP_FILE}`);
+console.log(`[STARTUP] RSVP_FILE resolved: ${RSVP_FILE_RESOLVED}`);
 
 // Ensure rsvps.json exists
 function readRSVPs() {
   try {
-    if (!fs.existsSync(RSVP_FILE)) {
-      fs.writeFileSync(RSVP_FILE, '[]', 'utf8');
-      console.log(`[INIT] Created new rsvps.json at ${RSVP_FILE}`);
+    if (!fs.existsSync(RSVP_FILE_RESOLVED)) {
+      fs.writeFileSync(RSVP_FILE_RESOLVED, '[]', 'utf8');
+      console.log(`[INIT] Created new rsvps.json at ${RSVP_FILE_RESOLVED}`);
     }
-    return JSON.parse(fs.readFileSync(RSVP_FILE, 'utf8'));
+    return JSON.parse(fs.readFileSync(RSVP_FILE_RESOLVED, 'utf8'));
   } catch (err) {
     console.error(`[ERROR] readRSVPs: ${err.message}`);
     return [];
@@ -28,8 +40,8 @@ function readRSVPs() {
 
 function writeRSVPs(data) {
   try {
-    fs.writeFileSync(RSVP_FILE, JSON.stringify(data, null, 2), 'utf8');
-    console.log(`[WRITE] Saved ${data.length} RSVPs to ${RSVP_FILE}`);
+    fs.writeFileSync(RSVP_FILE_RESOLVED, JSON.stringify(data, null, 2), 'utf8');
+    console.log(`[WRITE] Saved ${data.length} RSVPs to ${RSVP_FILE_RESOLVED}`);
     return true;
   } catch (err) {
     console.error(`[ERROR] writeRSVPs: ${err.message}`);
@@ -46,8 +58,8 @@ app.get('/health', (req, res) => {
   res.json({
     ok: true,
     dataDir: DATA_DIR,
-    rsvpFile: RSVP_FILE,
-    fileExists: fs.existsSync(RSVP_FILE),
+    rsvpFile: RSVP_FILE_RESOLVED,
+    fileExists: fs.existsSync(RSVP_FILE_RESOLVED),
     count: rsvps.length
   });
 });
@@ -146,7 +158,7 @@ app.get('/admin', (req, res) => {
     </table>
   </div>
   <a class="refresh" href="/admin">↻ Refresh</a>
-  <div class="debug">📁 Data dir: ${DATA_DIR} · File: ${RSVP_FILE} · Exists: ${fs.existsSync(RSVP_FILE)}</div>
+  <div class="debug">📁 Data dir: ${resolvedDataDir} · File: ${RSVP_FILE_RESOLVED} · Exists: ${fs.existsSync(RSVP_FILE_RESOLVED)}</div>
 </body>
 </html>`);
 });
