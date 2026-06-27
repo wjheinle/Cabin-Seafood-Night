@@ -4,7 +4,8 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const RSVP_FILE = path.join(__dirname, 'rsvps.json');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+const RSVP_FILE = path.join(DATA_DIR, 'rsvps.json');
 
 // Ensure rsvps.json exists
 if (!fs.existsSync(RSVP_FILE)) {
